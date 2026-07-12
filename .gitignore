@@ -7,8 +7,7 @@ wheels/
 *.egg-info
 
 # notebooks
-lessons.ipynb
-
+research/lessons.ipynb
 
 # Virtual environments
 .venv
