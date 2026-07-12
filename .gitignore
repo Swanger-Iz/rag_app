@@ -6,6 +6,9 @@ dist/
 wheels/
 *.egg-info
 
+# notebooks
+playground.ipynb
+
 # Virtual environments
 .venv
 
