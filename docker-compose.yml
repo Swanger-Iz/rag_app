@@ -1,0 +1,69 @@
+services:
+  qdrant:
+    restart: unless-stopped
+    image: qdrant/qdrant:v1.18.2
+    container_name: qdrant
+    env_file:
+      - .env
+    networks:
+      - backend_net
+    volumes:
+      - qdrant_storage:/qdrant/storage:z
+    expose:
+      - 6333
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+  
+  nginx:
+    build: ./nginx
+    image: nginx:rag_app
+    container_name: nginx_proxy
+    restart: unless-stopped
+    ports:
+      - 443:8443
+      - 80:8080
+    secrets:
+      - nginx_cert
+      - nginx_key
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    networks:
+      - frontend_net
+      - backend_net
+    healthcheck:
+      test: ["CMD", "wget", "--no-check-certificate", "-q", "--spider", "https://localhost:8443/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  frontend_net:  # nginx <-> bot (если бот будет ходить через nginx)
+    driver: bridge
+  backend_net:  # nginx <-> qdrant, изолировано от бота
+    driver: bridge
+    internal: true
+
+volumes:
+  qdrant_storage:
+
+secrets:
+  nginx_cert:
+    file: ./secrets/cert.pem
+  nginx_key:
+    file: ./secrets/key.pem
+  qdrant_api_key:
+    file: ./secrets/qdrant_api_key.txt
