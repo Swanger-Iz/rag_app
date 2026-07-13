@@ -65,5 +65,3 @@ secrets:
     file: ./secrets/cert.pem
   nginx_key:
     file: ./secrets/key.pem
-  qdrant_api_key:
-    file: ./secrets/qdrant_api_key.txt

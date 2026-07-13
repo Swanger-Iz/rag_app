@@ -24,5 +24,5 @@ async def get_collection_info():
     return await qdrant_client.get_collections()
 
 
-# asyncio.run(create_collection("test"))
-asyncio.run(get_collection_info())
+asyncio.run(create_collection("test"))
+# asyncio.run(get_collection_info())
