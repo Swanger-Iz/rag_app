@@ -1,8 +1,9 @@
 services:
   qdrant:
-    restart: unless-stopped
-    image: qdrant/qdrant:v1.18.2
+    build: ./qdrant
+    image: qdrant/qdrant:rag_app
     container_name: qdrant
+    restart: unless-stopped
     env_file:
       - .env
     networks:
@@ -11,6 +12,7 @@ services:
       - qdrant_storage:/qdrant/storage:z
     expose:
       - 6333
+      - 6334
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/6333' || exit 1"]
       interval: 10s
@@ -19,12 +21,13 @@ services:
       start_period: 15s
     deploy:
       resources:
-        limits:
-          cpus: "1.5"
-          memory: 1G
         reservations:
-          cpus: "0.5"
-          memory: 512M
+          devices:
+            - driver: nvidia
+              count: all  # Ядра gpu
+              capabilities: [gpu]
+        limits:
+          memory: 7.9G  # Ограничение памяти для gpu
   
   nginx:
     build: ./nginx
@@ -65,5 +68,3 @@ secrets:
     file: ./secrets/cert.pem
   nginx_key:
     file: ./secrets/key.pem
-  qdrant_api_key:
-    file: ./secrets/qdrant_api_key.txt
